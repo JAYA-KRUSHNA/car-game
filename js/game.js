@@ -244,6 +244,7 @@ class Game {
         if (code === 'KeyC') this.cycleCamera();
         if (code === 'KeyP' || code === 'Escape') this.togglePause();
         if (code === 'KeyM') this.toggleSound();
+        if (code === 'KeyH') window.soundEngine.playHorn(false);
 
         window.soundEngine.ensureContext();
     }
@@ -297,6 +298,51 @@ class Game {
             window.soundEngine.playClick();
             this.startRace();
         });
+        // Track / Map Selection Modals
+        document.getElementById('btn-open-maps')?.addEventListener('click', () => {
+            window.soundEngine.playClick();
+            this.switchScreen('MAPS');
+        });
+        document.getElementById('btn-open-maps-from-garage')?.addEventListener('click', () => {
+            window.soundEngine.playClick();
+            this.switchScreen('MAPS');
+        });
+        document.getElementById('btn-close-maps')?.addEventListener('click', () => {
+            window.soundEngine.playClick();
+            this.switchScreen('MENU');
+        });
+        document.getElementById('btn-race-from-maps')?.addEventListener('click', () => {
+            window.soundEngine.playClick();
+            this.startRace();
+        });
+
+        // Map Cards Selection
+        const mapCards = document.querySelectorAll('.map-card');
+        mapCards.forEach(card => {
+            card.addEventListener('click', () => {
+                mapCards.forEach(c => {
+                    c.classList.remove('active');
+                    const btn = c.querySelector('.btn-choose-map');
+                    if (btn) btn.textContent = 'SELECT TRACK';
+                });
+                card.classList.add('active');
+                const myBtn = card.querySelector('.btn-choose-map');
+                if (myBtn) myBtn.textContent = '✓ CURRENT TRACK';
+
+                const mapId = card.getAttribute('data-map');
+                this.world.setMap(mapId);
+
+                const badge = document.getElementById('hud-track-badge');
+                if (badge && this.world.currentMap) {
+                    badge.textContent = `📍 ${this.world.currentMap.name.toUpperCase()}`;
+                }
+                const envSelect = document.getElementById('setting-perf-mode');
+                if (envSelect) envSelect.value = mapId;
+
+                window.soundEngine.playClick();
+            });
+        });
+
         document.getElementById('btn-open-garage').addEventListener('click', () => {
             window.soundEngine.playClick();
             this.switchScreen('GARAGE');
@@ -399,7 +445,11 @@ class Game {
         const envSelect = document.getElementById('setting-perf-mode');
         if (envSelect) {
             envSelect.addEventListener('change', (e) => {
-                this.world.setTheme(e.target.value);
+                this.world.setMap(e.target.value);
+                const badge = document.getElementById('hud-track-badge');
+                if (badge && this.world.currentMap) {
+                    badge.textContent = `📍 ${this.world.currentMap.name.toUpperCase()}`;
+                }
             });
         }
     }
@@ -416,6 +466,13 @@ class Game {
             this.playerCar.group.rotation.set(0, 0, 0);
             window.soundEngine.stopMusic();
             this.updateMenuUI();
+        } else if (newScreen === 'MAPS') {
+            document.getElementById('screen-maps').classList.add('active');
+            this.pedestal.visible = true;
+            this.pedestal.position.set(0, -0.22, 0);
+            this.playerCar.group.position.set(0, 0, 0);
+            this.playerCar.group.rotation.set(0, 0, 0);
+            window.soundEngine.stopMusic();
         } else if (newScreen === 'GARAGE') {
             document.getElementById('screen-garage').classList.add('active');
             this.pedestal.visible = true;
@@ -758,20 +815,21 @@ class Game {
         this.carPitch += (targetPitch - this.carPitch) * 7.0 * dt;
         car.group.rotation.x = this.carPitch;
 
-        // Yaw: Points in direction of steering turn!
-        // When steerInput < 0 (left), targetYaw is positive (nose points left in Three.js right-handed Z-forward coordinate system)
-        const targetYaw = -this.lateralSpeed * (this.isDrifting ? 0.045 : 0.022);
+        // Yaw: Points in direction of steering turn
+        // From chase cam (behind car), negative Y rotation = nose turns LEFT visually
+        // lateralSpeed < 0 means steering left, so yaw must be POSITIVE proportion of lateralSpeed
+        const targetYaw = this.lateralSpeed * (this.isDrifting ? 0.045 : 0.022);
         this.carHeading += (targetYaw - this.carHeading) * 10 * dt;
         car.group.rotation.y = this.carHeading;
 
         // Roll / Lean:
-        // For Superbikes: Lean heavily into corners (up to 28° / 0.48 rad)!
-        // For Cars: Realistic body roll into corners
+        // For Superbikes: Lean heavily into corners (up to 28° / 0.48 rad)
+        // For Cars: Centrifugal body roll opposite to turning direction
         let targetRoll = 0;
         if (isBike) {
-            targetRoll = -this.lateralSpeed * 0.028; // Motorcycle banks into turn!
+            targetRoll = this.lateralSpeed * 0.028; // Motorcycle banks INTO the turn
         } else {
-            targetRoll = this.lateralSpeed * 0.018; // Car centrifugal body roll
+            targetRoll = -this.lateralSpeed * 0.018; // Car rolls AWAY from turn (centrifugal)
         }
         this.carRoll += (targetRoll - this.carRoll) * 8.5 * dt;
         car.group.rotation.z = this.carRoll;
@@ -781,7 +839,7 @@ class Game {
         car.group.position.y = this.suspensionY;
 
         // Front wheels turn in direction of steering
-        const wheelSteerAngle = steerInput * 0.38;
+        const wheelSteerAngle = -steerInput * 0.38;
         for (const fw of car.frontWheels) {
             fw.rotation.y = wheelSteerAngle;
         }

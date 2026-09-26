@@ -36,6 +36,9 @@
                 <button id="btn-play-game" class="cyber-btn menu-btn">
                     <span>⚡ START RACE</span>
                 </button>
+                <button id="btn-open-maps" class="cyber-btn menu-btn gold">
+                    <span>🌐 SELECT TRACK / MAP</span>
+                </button>
                 <button id="btn-open-garage" class="cyber-btn menu-btn accent">
                     <span>🚗 SHOWROOM & GARAGE</span>
                 </button>
@@ -52,6 +55,84 @@
     </section>
 
     <!-- ==========================================================================
+         TRACK & MAP SELECTION SCREEN
+         ========================================================================== -->
+    <section id="screen-maps" class="screen">
+        <div class="garage-top" style="width: 100%; max-width: 1100px;">
+            <div class="garage-title">SELECT <span>CIRCUIT / TRACK</span></div>
+            <button id="btn-close-maps" class="cyber-btn">BACK</button>
+        </div>
+
+        <div style="width: 100%; max-width: 1100px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin: 24px 0;">
+            <!-- Map 1 -->
+            <div class="map-card active" data-map="tokyo_night">
+                <span class="map-badge-active">ACTIVE</span>
+                <div class="map-card-header">
+                    <span class="map-card-title" style="color: var(--cyan);">TOKYO EXPRESSWAY</span>
+                    <span class="kbd-badge" style="background: rgba(0, 240, 255, 0.15); border-color: var(--cyan);">🌙 NIGHT</span>
+                </div>
+                <p class="map-card-desc">Midnight wet asphalt, soaring illuminated glass skyscrapers, and radiant neon billboards.</p>
+                <div class="map-card-stats">
+                    <span>Grip: <b>High (Wet)</b></span>
+                    <span>Lighting: <b>Neon Grid</b></span>
+                    <span>Diff: <b>Hard</b></span>
+                </div>
+                <button class="cyber-btn btn-choose-map" style="width: 100%; padding: 8px;">SELECT TRACK</button>
+            </div>
+
+            <!-- Map 2 -->
+            <div class="map-card" data-map="sunset_coast">
+                <span class="map-badge-active">ACTIVE</span>
+                <div class="map-card-header">
+                    <span class="map-card-title" style="color: #ff0077;">PACIFIC SUNSET</span>
+                    <span class="kbd-badge" style="background: rgba(255, 0, 119, 0.15); border-color: #ff0077;">🌅 SUNSET</span>
+                </div>
+                <p class="map-card-desc">Golden hour coastal highway with ocean horizon, sandy beaches, swaying palms, and luxury villas.</p>
+                <div class="map-card-stats">
+                    <span>Grip: <b>Maximum</b></span>
+                    <span>Lighting: <b>Warm Sun</b></span>
+                    <span>Diff: <b>Medium</b></span>
+                </div>
+                <button class="cyber-btn btn-choose-map" style="width: 100%; padding: 8px;">SELECT TRACK</button>
+            </div>
+
+            <!-- Map 3 -->
+            <div class="map-card" data-map="desert_run">
+                <span class="map-badge-active">ACTIVE</span>
+                <div class="map-card-header">
+                    <span class="map-card-title" style="color: var(--gold);">DUBAI DESERT</span>
+                    <span class="kbd-badge" style="background: rgba(255, 204, 0, 0.15); border-color: var(--gold);">☀️ DAY</span>
+                </div>
+                <p class="map-card-desc">Sun-drenched highway bordered by golden sand dunes, desert canyon mesas, and solar monoliths.</p>
+                <div class="map-card-stats">
+                    <span>Grip: <b>Medium (Dust)</b></span>
+                    <span>Lighting: <b>Direct Sun</b></span>
+                    <span>Diff: <b>Fast</b></span>
+                </div>
+                <button class="cyber-btn btn-choose-map" style="width: 100%; padding: 8px;">SELECT TRACK</button>
+            </div>
+
+            <!-- Map 4 -->
+            <div class="map-card" data-map="mountain_pass">
+                <span class="map-badge-active">ACTIVE</span>
+                <div class="map-card-header">
+                    <span class="map-card-title" style="color: #00ffaa;">ALPINE PASS</span>
+                    <span class="kbd-badge" style="background: rgba(0, 255, 170, 0.15); border-color: #00ffaa;">❄️ DAWN</span>
+                </div>
+                <p class="map-card-desc">Snow-capped granite peaks, crisp alpine morning haze, evergreen pines, and illuminated concrete tunnels.</p>
+                <div class="map-card-stats">
+                    <span>Grip: <b>Crisp Road</b></span>
+                    <span>Lighting: <b>Dawn Fog</b></span>
+                    <span>Diff: <b>Technical</b></span>
+                </div>
+                <button class="cyber-btn btn-choose-map" style="width: 100%; padding: 8px;">SELECT TRACK</button>
+            </div>
+        </div>
+
+        <button id="btn-race-from-maps" class="cyber-btn accent" style="padding: 14px 45px; font-size: 1.15rem;">START DRIVE ON THIS MAP ⚡</button>
+    </section>
+
+    <!-- ==========================================================================
          GARAGE & SHOWROOM SCREEN
          ========================================================================== -->
     <section id="screen-garage" class="screen">
@@ -61,7 +142,10 @@
                 <span>BALANCE</span>
                 <div class="credits-val"><span id="garage-credits-display">0</span> CR</div>
             </div>
-            <button id="btn-close-garage" class="cyber-btn">BACK TO MENU</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-open-maps-from-garage" class="cyber-btn gold">🌐 TRACKS</button>
+                <button id="btn-close-garage" class="cyber-btn">BACK</button>
+            </div>
         </div>
 
         <div class="garage-main">
@@ -162,6 +246,7 @@
                     <span id="hud-score" class="score-value">0</span>
                     <span id="hud-distance" class="distance-value">0.0 KM</span>
                 </div>
+                <div id="hud-track-badge" class="kbd-badge" style="align-self: flex-start; background: rgba(0, 240, 255, 0.15); border-color: var(--cyan); font-size: 0.85rem; padding: 4px 10px;">📍 TOKYO EXPRESSWAY</div>
                 <div id="hud-combo-badge" class="combo-badge">🔥 x2 MULTIPLIER</div>
                 <div id="hud-shield" class="shield-indicator">🛡️ EMP SHIELD ACTIVE</div>
             </div>

@@ -333,6 +333,9 @@ class TrafficManager {
                             0x00f0ff
                         );
                         onNearMiss(v);
+                        if (Math.random() > 0.45 && window.soundEngine) {
+                            window.soundEngine.playHorn(true);
+                        }
                     }
                 }
             }

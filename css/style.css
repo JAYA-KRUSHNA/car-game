@@ -982,3 +982,134 @@ input[type="range"]::-webkit-slider-thumb {
     .hud-bottom-bar { flex-direction: column; align-items: center; gap: 14px; }
     #touch-controls { display: flex; }
 }
+
+/* ==========================================================================
+   TRACK / MAP SELECTION SCREEN STYLING
+   ========================================================================== */
+#screen-maps {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 24px;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+#screen-maps.active {
+    display: flex;
+}
+
+.map-card {
+    position: relative;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    cursor: pointer;
+    background: rgba(10, 16, 32, 0.72);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(16px);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s, box-shadow 0.25s;
+    overflow: hidden;
+}
+
+.map-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: transparent;
+    transition: background 0.25s;
+}
+
+.map-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 240, 255, 0.6);
+    box-shadow: 0 10px 28px rgba(0, 240, 255, 0.2);
+}
+
+.map-card.active {
+    border-color: var(--cyan);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.35);
+    background: rgba(14, 24, 48, 0.85);
+}
+
+.map-card.active::before {
+    background: var(--cyan);
+}
+
+.map-card[data-map="sunset_coast"].active::before {
+    background: #ff0077;
+}
+.map-card[data-map="sunset_coast"].active {
+    border-color: #ff0077;
+    box-shadow: 0 0 25px rgba(255, 0, 119, 0.35);
+}
+
+.map-card[data-map="desert_run"].active::before {
+    background: var(--gold);
+}
+.map-card[data-map="desert_run"].active {
+    border-color: var(--gold);
+    box-shadow: 0 0 25px rgba(255, 204, 0, 0.35);
+}
+
+.map-card[data-map="mountain_pass"].active::before {
+    background: #00ffaa;
+}
+.map-card[data-map="mountain_pass"].active {
+    border-color: #00ffaa;
+    box-shadow: 0 0 25px rgba(0, 255, 170, 0.35);
+}
+
+.map-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.map-card-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.map-card-desc {
+    font-size: 0.9rem;
+    color: #92a4cb;
+    line-height: 1.45;
+    min-height: 48px;
+}
+
+.map-card-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #657b9f;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+}
+
+.map-badge-active {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--cyan);
+    color: #000;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: none;
+    letter-spacing: 1px;
+}
+
+.map-card.active .map-badge-active {
+    display: block;
+}
