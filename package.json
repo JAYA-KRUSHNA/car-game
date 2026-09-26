@@ -1,0 +1,22 @@
+{
+  "name": "neon-velocity",
+  "version": "1.0.0",
+  "description": "Neon Velocity - 3D Cyberpunk Racing Game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve -s . -l $PORT",
+    "dev": "npx -y serve -s . -l 3000"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  },
+  "keywords": [
+    "threejs",
+    "car-game",
+    "racing",
+    "cyberpunk",
+    "webgl"
+  ],
+  "author": "JAYA-KRUSHNA",
+  "license": "MIT"
+}
