@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON VELOCITY: Cyber Overdrive - 3D Racing Experience</title>
+    <meta name="description" content="High-octane 3D cyberpunk highway racer with breathtaking visuals, zero lag 120 FPS performance, dynamic AI traffic, drifting, and nitro overdrive.">
+    <meta name="keywords" content="car game, 3D racing game, cyberpunk racer, threejs car game, zero lag web game">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- WebGL Canvas Container -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Speed / Nitro Edge Glow Vignette & Crash Flash -->
+    <div id="speed-vignette"></div>
+    <div id="crash-flash"></div>
+
+    <!-- ==========================================================================
+         MAIN MENU SCREEN
+         ========================================================================== -->
+    <section id="screen-menu" class="screen active">
+        <div class="menu-header">
+            <h1 class="game-title">Neon Velocity</h1>
+            <p class="game-subtitle">Cyber Overdrive // 120 FPS Experience</p>
+        </div>
+
+        <div class="menu-card glass-panel">
+            <div class="menu-credits-bar">
+                <span>CREDITS AVAILABLE</span>
+                <div class="credits-val"><span id="menu-credits-display">0</span> CR</div>
+            </div>
+
+            <div class="menu-buttons">
+                <button id="btn-play-game" class="cyber-btn menu-btn">
+                    <span>⚡ START RACE</span>
+                </button>
+                <button id="btn-open-garage" class="cyber-btn menu-btn accent">
+                    <span>🚗 SHOWROOM & GARAGE</span>
+                </button>
+                <button id="btn-open-settings" class="cyber-btn menu-btn">
+                    <span>⚙️ SETTINGS & CONTROLS</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="menu-footer">
+            <button id="btn-toggle-sound-menu" class="icon-btn" title="Toggle Audio">🔊</button>
+            <div style="font-size: 0.95rem; color: #8fa0c0;">USE [W A S D] OR [ARROWS] TO DRIVE • [SPACE] TO DRIFT • [SHIFT] FOR NITRO</div>
+        </div>
+    </section>
+
+    <!-- ==========================================================================
+         GARAGE & SHOWROOM SCREEN
+         ========================================================================== -->
+    <section id="screen-garage" class="screen">
+        <div class="garage-top">
+            <div class="garage-title">CYBER <span>SHOWROOM</span></div>
+            <div class="menu-credits-bar">
+                <span>BALANCE</span>
+                <div class="credits-val"><span id="garage-credits-display">0</span> CR</div>
+            </div>
+            <button id="btn-close-garage" class="cyber-btn">BACK TO MENU</button>
+        </div>
+
+        <div class="garage-main">
+            <!-- Left: Car Details & Stats -->
+            <div class="car-info-card glass-panel">
+                <div>
+                    <h2 id="garage-car-name" class="car-name">Apex Phantom</h2>
+                    <p id="garage-car-tagline" class="car-tagline">Precision Engineered Aerodynamic Hypercar</p>
+                </div>
+
+                <div class="car-stats">
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>Top Speed</span>
+                            <span id="stat-val-speed">215 MPH</span>
+                        </div>
+                        <div class="stat-bar-track"><div id="stat-fill-speed" class="stat-bar-fill" style="width: 75%;"></div></div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>Acceleration</span>
+                            <span id="stat-val-accel">9.2 / 10</span>
+                        </div>
+                        <div class="stat-bar-track"><div id="stat-fill-accel" class="stat-bar-fill" style="width: 82%;"></div></div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>Handling</span>
+                            <span id="stat-val-handling">8.8 / 10</span>
+                        </div>
+                        <div class="stat-bar-track"><div id="stat-fill-handling" class="stat-bar-fill" style="width: 78%;"></div></div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>Nitro Thruster</span>
+                            <span id="stat-val-nitro">8.5 / 10</span>
+                        </div>
+                        <div class="stat-bar-track"><div id="stat-fill-nitro" class="stat-bar-fill" style="width: 74%;"></div></div>
+                    </div>
+                </div>
+
+                <button id="btn-garage-action" class="cyber-btn accent" style="width: 100%;">SELECT VEHICLE</button>
+            </div>
+
+            <!-- Right: Customizer Colors -->
+            <div class="garage-customizer glass-panel">
+                <div>
+                    <div class="custom-section-title">AERODYNAMIC FINISH</div>
+                    <div class="color-swatches" id="paint-swatches">
+                        <div class="color-dot active" data-color="0x00e5ff" style="background: #00e5ff;"></div>
+                        <div class="color-dot" data-color="0xff0077" style="background: #ff0077;"></div>
+                        <div class="color-dot" data-color="0xff2a00" style="background: #ff2a00;"></div>
+                        <div class="color-dot" data-color="0x00ff88" style="background: #00ff88;"></div>
+                        <div class="color-dot" data-color="0xffbb00" style="background: #ffbb00;"></div>
+                        <div class="color-dot" data-color="0x12141a" style="background: #12141a;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="custom-section-title">NEON UNDERGLOW</div>
+                    <div class="color-swatches" id="underglow-swatches">
+                        <div class="color-dot active" data-color="0x00f0ff" style="background: #00f0ff;"></div>
+                        <div class="color-dot" data-color="0xff00aa" style="background: #ff00aa;"></div>
+                        <div class="color-dot" data-color="0x00ff88" style="background: #00ff88;"></div>
+                        <div class="color-dot" data-color="0xff3300" style="background: #ff3300;"></div>
+                        <div class="color-dot" data-color="0xaa00ff" style="background: #aa00ff;"></div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.85rem; color: #8ea0c0; line-height: 1.4;">
+                    Rotate camera by dragging. Earn credits during races to unlock high-tier hypercars!
+                </div>
+            </div>
+        </div>
+
+        <div class="garage-bottom">
+            <div class="car-selector-nav">
+                <button id="btn-prev-car" class="cyber-btn">◀ PREV</button>
+                <div id="garage-car-index" class="car-index-indicator">VEHICLE 1 / 4</div>
+                <button id="btn-next-car" class="cyber-btn">NEXT ▶</button>
+            </div>
+            <button id="btn-race-from-garage" class="cyber-btn gold">START DRIVE ⚡</button>
+        </div>
+    </section>
+
+    <!-- ==========================================================================
+         IN-GAME HEADS UP DISPLAY (HUD)
+         ========================================================================== -->
+    <section id="screen-hud" class="screen">
+        <!-- Top Bar -->
+        <div class="hud-top-bar">
+            <div class="hud-left">
+                <div class="hud-score-card glass-panel">
+                    <span class="score-title">Score</span>
+                    <span id="hud-score" class="score-value">0</span>
+                    <span id="hud-distance" class="distance-value">0.0 KM</span>
+                </div>
+                <div id="hud-combo-badge" class="combo-badge">🔥 x2 MULTIPLIER</div>
+                <div id="hud-shield" class="shield-indicator">🛡️ EMP SHIELD ACTIVE</div>
+            </div>
+
+            <div class="hud-center">
+                <div id="combo-popup">CLOSE CALL! +150</div>
+            </div>
+
+            <div class="hud-right">
+                <!-- Mini Traffic Radar -->
+                <div class="radar-box">
+                    <div class="radar-grid"></div>
+                    <div class="radar-blip-player"></div>
+                    <div id="radar-blips-container"></div>
+                </div>
+
+                <button id="btn-switch-camera" class="icon-btn" title="Switch Camera (Key: C)">📷</button>
+                <button id="btn-pause-game" class="icon-btn" title="Pause Game (Key: P or ESC)">⏸️</button>
+            </div>
+        </div>
+
+        <!-- Bottom Bar: Tachometer, Speed, Gear, Nitro -->
+        <div class="hud-bottom-bar">
+            <!-- Nitro Overdrive Gauge -->
+            <div class="nitro-cluster">
+                <div class="nitro-gauge-wrap">
+                    <div id="hud-nitro-fill" class="nitro-fill" style="height: 100%;"></div>
+                </div>
+                <span class="nitro-label">NITRO</span>
+            </div>
+
+            <!-- Digital Cluster & Speedometer -->
+            <div class="speedo-cluster">
+                <div class="dial-container">
+                    <svg class="dial-svg" viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="cyan-magenta-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00f0ff" />
+                                <stop offset="70%" stop-color="#00ff88" />
+                                <stop offset="100%" stop-color="#ff007f" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Background track arc -->
+                        <circle cx="100" cy="100" r="90" class="dial-bg-track"></circle>
+                        <!-- Dynamic RPM arc -->
+                        <circle id="hud-rpm-circle" cx="100" cy="100" r="90" class="dial-progress-rpm"></circle>
+                    </svg>
+
+                    <div class="dial-content">
+                        <div id="hud-gear" class="gear-display">1</div>
+                        <div id="hud-speed" class="speed-digital">0</div>
+                        <div class="unit-label">MPH</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="width: 60px;"></div> <!-- Spacer for symmetry -->
+        </div>
+    </section>
+
+    <!-- Mobile Virtual Controls -->
+    <div id="touch-controls">
+        <div style="display: flex; gap: 14px;">
+            <button id="touch-left" class="touch-btn">◀</button>
+            <button id="touch-right" class="touch-btn">▶</button>
+        </div>
+        <div style="display: flex; gap: 14px;">
+            <button id="touch-brake" class="touch-btn" style="border-color: #ff3300;">DRIFT</button>
+            <button id="touch-nitro" class="touch-btn nitro-touch">NITRO</button>
+            <button id="touch-gas" class="touch-btn" style="border-color: #00ff88;">GAS</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         PAUSE SCREEN MODAL
+         ========================================================================== -->
+    <section id="screen-pause" class="screen">
+        <div class="summary-card glass-panel">
+            <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--cyan);">RACE PAUSED</h2>
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;">
+                <button id="btn-resume-game" class="cyber-btn accent">RESUME RACE</button>
+                <button id="btn-restart-game" class="cyber-btn">RESTART</button>
+                <button id="btn-exit-garage" class="cyber-btn">VISIT GARAGE</button>
+                <button id="btn-exit-menu" class="cyber-btn">MAIN MENU</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================================================
+         GAME OVER SCREEN MODAL
+         ========================================================================== -->
+    <section id="screen-gameover" class="screen">
+        <div class="summary-card glass-panel">
+            <h2 class="gameover-title">VEHICLE WRECKED</h2>
+            <div id="gameover-new-record" class="new-record-badge">🏆 NEW RECORD HIGH SCORE!</div>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <span class="stat-box-title">Final Score</span>
+                    <span id="go-score" class="stat-box-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-title">Distance Traveled</span>
+                    <span id="go-distance" class="stat-box-value">0.0 KM</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-title">Max Velocity</span>
+                    <span id="go-max-speed" class="stat-box-value">0 MPH</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-title">Near Miss Combos</span>
+                    <span id="go-near-misses" class="stat-box-value">0</span>
+                </div>
+            </div>
+
+            <div class="menu-credits-bar">
+                <span>CREDITS EARNED</span>
+                <div class="credits-val"><span id="go-credits-earned">+0</span> CR</div>
+            </div>
+
+            <div style="display: flex; gap: 14px; margin-top: 10px;">
+                <button id="btn-go-restart" class="cyber-btn accent" style="flex: 1;">RACE AGAIN ⚡</button>
+                <button id="btn-go-garage" class="cyber-btn" style="flex: 1;">GARAGE 🚗</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================================================
+         SETTINGS & CONTROLS MODAL
+         ========================================================================== -->
+    <section id="screen-settings" class="screen">
+        <div class="settings-content glass-panel">
+            <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--cyan); text-align: center;">SETTINGS & CONTROLS</h2>
+
+            <div class="settings-row">
+                <span>Master Volume</span>
+                <input type="range" id="setting-vol-master" min="0" max="100" value="80">
+            </div>
+
+            <div class="settings-row">
+                <span>Music Volume</span>
+                <input type="range" id="setting-vol-music" min="0" max="100" value="60">
+            </div>
+
+            <div class="settings-row">
+                <span>Performance Mode</span>
+                <select id="setting-perf-mode" style="background: #111626; color: #fff; border: 1px solid var(--cyan); padding: 6px 12px; border-radius: 4px; outline: none; font-family: var(--font-body); font-weight: 600;">
+                    <option value="ultra">Ultra (120 FPS / Full FX)</option>
+                    <option value="high" selected>High (60+ FPS Balanced)</option>
+                    <option value="battery">Battery Saver</option>
+                </select>
+            </div>
+
+            <div class="controls-help-table">
+                <div class="control-item"><span>Steer Vehicle</span><span class="kbd-badge">A / D or ← / →</span></div>
+                <div class="control-item"><span>Accelerate</span><span class="kbd-badge">W or ↑</span></div>
+                <div class="control-item"><span>Brake / Drift</span><span class="kbd-badge">SPACE or S / ↓</span></div>
+                <div class="control-item"><span>Nitro Boost</span><span class="kbd-badge">LEFT SHIFT</span></div>
+                <div class="control-item"><span>Switch Camera</span><span class="kbd-badge">C</span></div>
+                <div class="control-item"><span>Pause Game</span><span class="kbd-badge">P or ESC</span></div>
+                <div class="control-item"><span>Mute Audio</span><span class="kbd-badge">M</span></div>
+            </div>
+
+            <button id="btn-close-settings" class="cyber-btn accent" style="width: 100%;">CLOSE SETTINGS</button>
+        </div>
+    </section>
+
+    <!-- Game Scripts -->
+    <script src="lib/three.min.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/car-models.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/traffic.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
