@@ -1,28 +1,33 @@
 /**
- * Neon Velocity - Highly Realistic Automotive Game Engine
+ * Neon Velocity - Realistic Automotive & Superbike Game Engine
  * Features:
- * - Real PCFSoftShadowMap shadows
- * - Realistic vehicle suspension (acceleration squat, brake dive, cornering body roll)
- * - Motorized Active Aero Rear Wing (downforce at speed, tilts 45° as Air Brake on braking)
- * - Heated carbon-ceramic brake disc glow on hard stops
- * - Persistent tire skid marks burned into asphalt on drifts
- * - Exhaust backfire crackle with flickering flame flash & ground illumination
- * - 3 Selectable realistic environments (Midnight, Sunset, Cyber Dawn)
- * - Interactive showroom with 360° orbit and scissor door demonstration
+ * - 7 Playable Vehicles: Hypercars, Tuners, and High-Performance Superbikes!
+ * - Realistic motorcycle leaning dynamics (up to 28° lean angle into turns)
+ * - Corrected steering orientation (Left moves Left, points Left, leans Left; Right moves Right, points Right, leans Right)
+ * - Active aero motorized wing & air brake
+ * - Heated brake disc glow
+ * - Persistent tire rubber skid marks
+ * - Exhaust backfire crackles with dynamic ground light
+ * - Photorealistic PCFSoftShadowMap shadows & atmospheric sky dome
  */
 
 class Game {
     constructor() {
         this.canvas = document.getElementById('webgl-canvas');
-        this.state = 'MENU'; // MENU, GARAGE, PLAYING, PAUSED, GAMEOVER
+        this.state = 'MENU';
 
-        this.carKeys = ['apex', 'spectre', 'viper', 'valkyrie'];
+        // 7 Playable Vehicles (Cars & Superbikes)
+        this.carKeys = ['apex', 'spectre', 'ninja', 'horizon', 'viper', 'kaneda', 'valkyrie'];
         this.selectedCarIndex = 0;
+
         this.customColors = {
             apex: { paint: 0x00d8ff, underglow: 0x00f0ff },
             spectre: { paint: 0xff0066, underglow: 0xff00aa },
+            ninja: { paint: 0x00ff44, underglow: 0x00ff88 },
+            horizon: { paint: 0x2255dd, underglow: 0x0088ff },
             viper: { paint: 0xee2200, underglow: 0xff3300 },
-            valkyrie: { paint: 0x00ff88, underglow: 0x00ffaa }
+            kaneda: { paint: 0xff1122, underglow: 0xff0044 },
+            valkyrie: { paint: 0xffcc00, underglow: 0xffbb00 }
         };
 
         this.credits = parseInt(localStorage.getItem('nv_credits') || '1500', 10);
@@ -39,43 +44,37 @@ class Game {
         this.skidmarks = null;
         this.playerCar = null;
 
-        // Camera Modes: 0: Dynamic Chase, 1: Bonnet / Hood, 2: Cockpit / Dash, 3: Top-Down
-        this.cameraMode = 0;
+        this.cameraMode = 0; // 0: Chase, 1: Hood/Handlebars, 2: Cockpit/Helmet, 3: Top-Down
         this.baseFov = 64;
         this.currentFov = 64;
 
-        // Physics State
-        this.speed = 0; // MPH
+        this.speed = 0;
         this.maxSpeed = 218;
         this.baseMaxSpeed = 218;
         this.acceleration = 36;
         this.handling = 18;
         this.currentGear = 1;
-        this.rpm = 1000;
+        this.rpm = 1100;
         this.lateralSpeed = 0;
 
-        // Realistic Suspension Dynamics
+        // Suspension & Leaning Dynamics
         this.carHeading = 0; // Yaw
         this.carPitch = 0;   // Squat / Dive
-        this.carRoll = 0;    // Body roll into corners
-        this.suspensionY = 0; // Micro road bounce
+        this.carRoll = 0;    // Lean / Bank
+        this.suspensionY = 0;
         this.isDrifting = false;
         this.driftIntensity = 0;
 
-        // Backfire state
         this.backfireTimer = 0;
         this.isBackfiring = false;
 
-        // Nitro
         this.nitroAmount = 100;
         this.isNitroActive = false;
         this.nitroDrainRate = 22;
         this.nitroRechargeRate = 4.5;
 
-        // Shield
         this.shieldTimer = 0;
 
-        // Metrics
         this.score = 0;
         this.distanceTraveled = 0;
         this.maxSpeedReached = 0;
@@ -96,7 +95,6 @@ class Game {
         this.isDraggingGarage = false;
         this.lastMouseX = 0;
 
-        // Vectors for zero-allocation performance
         this._camTarget = new THREE.Vector3();
         this._camPos = new THREE.Vector3();
         this._wheelRLPos = new THREE.Vector3();
@@ -131,14 +129,12 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // Real Shadow Mapping for Photorealism
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.15;
 
-        // Showroom turntable pedestal
+        // Turntable pedestal
         const pedestalGeom = new THREE.CylinderGeometry(4.3, 4.5, 0.45, 36);
         const pedestalMat = new THREE.MeshStandardMaterial({
             color: 0x111624,
@@ -172,7 +168,7 @@ class Game {
             this.scene.remove(this.playerCar.group);
         }
 
-        this.playerCar = window.carFactory.createPlayerCar(key, colors.paint, colors.underglow);
+        this.playerCar = window.carFactory.createVehicle(key, colors.paint, colors.underglow);
         this.scene.add(this.playerCar.group);
 
         const preset = CAR_PRESETS[key];
@@ -256,7 +252,6 @@ class Game {
         const code = e.code;
         if (code === 'KeyW' || code === 'ArrowUp') {
             this.keys.up = false;
-            // Backfire pop on sudden throttle release at high RPM!
             if (this.rpm > 5500 && Math.random() > 0.4) {
                 this.triggerExhaustBackfire();
             }
@@ -338,7 +333,6 @@ class Game {
             this.handleGarageAction();
         });
 
-        // Color Swatches
         const paintDots = document.querySelectorAll('#paint-swatches .color-dot');
         paintDots.forEach(dot => {
             dot.addEventListener('click', () => {
@@ -366,7 +360,6 @@ class Game {
             });
         });
 
-        // HUD Buttons
         document.getElementById('btn-switch-camera').addEventListener('click', () => {
             this.cycleCamera();
         });
@@ -374,7 +367,6 @@ class Game {
             this.togglePause();
         });
 
-        // Pause Menu
         document.getElementById('btn-resume-game').addEventListener('click', () => {
             this.togglePause();
         });
@@ -388,7 +380,6 @@ class Game {
             this.switchScreen('MENU');
         });
 
-        // Game Over Buttons
         document.getElementById('btn-go-restart').addEventListener('click', () => {
             this.startRace();
         });
@@ -396,7 +387,6 @@ class Game {
             this.switchScreen('GARAGE');
         });
 
-        // Settings Sliders
         document.getElementById('setting-vol-master').addEventListener('input', (e) => {
             window.soundEngine.setMasterVolume(e.target.value / 100);
         });
@@ -406,14 +396,8 @@ class Game {
             }
         });
 
-        // Environment Selector in Settings
         const envSelect = document.getElementById('setting-perf-mode');
         if (envSelect) {
-            envSelect.innerHTML = `
-                <option value="midnight" selected>Midnight Metropolis (Wet Neon)</option>
-                <option value="sunset">Golden Sunset Coastline</option>
-                <option value="dawn">Cyber Dawn (Atmospheric)</option>
-            `;
             envSelect.addEventListener('change', (e) => {
                 this.world.setTheme(e.target.value);
             });
@@ -544,7 +528,7 @@ class Game {
         const isUnlocked = this.unlockedCars.includes(key);
 
         document.getElementById('garage-credits-display').textContent = this.credits.toLocaleString();
-        document.getElementById('garage-car-index').textContent = `VEHICLE ${this.selectedCarIndex + 1} / ${this.carKeys.length}`;
+        document.getElementById('garage-car-index').textContent = `VEHICLE ${this.selectedCarIndex + 1} / ${this.carKeys.length} ${preset.type === 'bike' ? '🏍️ SUPERBIKE' : '🏎️ HYPERCAR'}`;
         document.getElementById('garage-car-name').textContent = preset.name;
         document.getElementById('garage-car-tagline').textContent = preset.tagline;
 
@@ -645,9 +629,10 @@ class Game {
     updatePhysics(dt) {
         const car = this.playerCar;
         const pos = car.group.position;
+        const isBike = car.isBike === true;
         const isBraking = this.keys.down || this.keys.drift;
 
-        // 1. NITRO OVERDRIVE
+        // 1. NITRO BOOST
         const wantNitro = this.keys.nitro && this.nitroAmount > 0 && this.keys.up;
         if (wantNitro) {
             this.isNitroActive = true;
@@ -655,8 +640,8 @@ class Game {
             this.maxSpeed = this.baseMaxSpeed + 48;
             document.getElementById('speed-vignette').classList.add('nitro-active');
 
-            this.particles.emitNitro(pos.x - 0.4, 0.35, pos.z - 2.2, this.speed, this.carHeading);
-            this.particles.emitNitro(pos.x + 0.4, 0.35, pos.z - 2.2, this.speed, this.carHeading);
+            this.particles.emitNitro(pos.x - 0.2, 0.35, pos.z - 2.0, this.speed, this.carHeading);
+            this.particles.emitNitro(pos.x + 0.2, 0.35, pos.z - 2.0, this.speed, this.carHeading);
 
             car.flameL.scale.set(1.4, 1.4, 1.8);
             car.flameR.scale.set(1.4, 1.4, 1.8);
@@ -669,7 +654,6 @@ class Game {
             this.nitroAmount = Math.min(100, this.nitroAmount + this.nitroRechargeRate * dt);
             document.getElementById('speed-vignette').classList.remove('nitro-active');
 
-            // Handle backfire fading
             if (this.isBackfiring) {
                 this.backfireTimer -= dt;
                 if (this.backfireTimer <= 0) {
@@ -689,7 +673,7 @@ class Game {
             }
         }
 
-        // 2. ACCELERATION & BRAKING CURVES
+        // 2. ACCELERATION & BRAKING
         const accelRate = this.isNitroActive ? this.acceleration * 1.8 : this.acceleration;
         const brakeRate = 58;
         const dragRate = 12;
@@ -706,7 +690,7 @@ class Game {
             this.maxSpeedReached = Math.round(this.speed);
         }
 
-        // 3. 6-SPEED TRANSMISSION & RPM DYNAMICS
+        // 3. GEAR & RPM
         const speedRatio = this.speed / this.maxSpeed;
         const numGears = 6;
         const gearFraction = 1.0 / numGears;
@@ -727,23 +711,21 @@ class Game {
         car.updateAero(speedRatio, isBraking, dt);
         car.updateBrakeGlow(isBraking, speedRatio, dt);
 
-        // 5. STEERING, CORNERING & DRIFTING
+        // 5. CORRECTED STEERING CONTROLS (Left moves Left, Right moves Right)
         let steerInput = 0;
-        if (this.keys.left) steerInput -= 1;
-        if (this.keys.right) steerInput += 1;
+        if (this.keys.left) steerInput -= 1; // Left arrow / A steers LEFT (-X)
+        if (this.keys.right) steerInput += 1; // Right arrow / D steers RIGHT (+X)
 
         this.isDrifting = (this.keys.drift || isBraking) && this.speed > 42 && Math.abs(steerInput) > 0;
         if (this.isDrifting) {
             this.driftIntensity = Math.min(1.0, this.driftIntensity + dt * 4.2);
             this.score += Math.round(350 * dt * this.comboMultiplier);
 
-            // Tire drift smoke
-            this.particles.emitDriftSmoke(pos.x - 1.0, 0.38, pos.z - 1.38);
-            this.particles.emitDriftSmoke(pos.x + 1.0, 0.38, pos.z - 1.38);
+            this.particles.emitDriftSmoke(pos.x - 0.4, 0.38, pos.z - 1.2);
+            this.particles.emitDriftSmoke(pos.x + 0.4, 0.38, pos.z - 1.2);
 
-            // Record persistent tire skid marks on asphalt
-            this._wheelRLPos.set(pos.x - 1.0, 0, pos.z - 1.38);
-            this._wheelRRPos.set(pos.x + 1.0, 0, pos.z - 1.38);
+            this._wheelRLPos.set(pos.x - 0.6, 0, pos.z - 1.2);
+            this._wheelRRPos.set(pos.x + 0.6, 0, pos.z - 1.2);
             this.skidmarks.addSkidmark(this._wheelRLPos, this._wheelRRPos, this.driftIntensity);
         } else {
             this.driftIntensity = Math.max(0.0, this.driftIntensity - dt * 3.5);
@@ -753,50 +735,58 @@ class Game {
         this.lateralSpeed += (targetLatSpeed - this.lateralSpeed) * 8.5 * dt;
         pos.x += this.lateralSpeed * dt;
 
-        // Highway bounds & guardrail scrapes
+        // Road boundaries
         const maxRoadX = 9.85;
         if (pos.x < -maxRoadX) {
             pos.x = -maxRoadX;
             this.lateralSpeed = 0;
-            this.particles.emitSparks(pos.x - 0.95, 0.45, pos.z, 10, 0x00f0ff);
+            this.particles.emitSparks(pos.x - 0.5, 0.45, pos.z, 10, 0x00f0ff);
         } else if (pos.x > maxRoadX) {
             pos.x = maxRoadX;
             this.lateralSpeed = 0;
-            this.particles.emitSparks(pos.x + 0.95, 0.45, pos.z, 10, 0x00f0ff);
+            this.particles.emitSparks(pos.x + 0.5, 0.45, pos.z, 10, 0x00f0ff);
         }
 
-        // 6. REALISTIC SUSPENSION WEIGHT TRANSFER (PITCH & ROLL)
-        // Squat on hard acceleration (pitch up), Dive on hard braking (pitch down)
+        // 6. REALISTIC ORIENTATION: YAW, PITCH, AND ROLL/LEAN
+        // Pitch: Squat on acceleration, Dive on braking
         let targetPitch = 0;
         if (this.keys.up) {
             targetPitch = 0.025 * (this.isNitroActive ? 1.6 : 1.0);
         } else if (isBraking) {
-            targetPitch = -0.045; // Front nose dips down!
+            targetPitch = -0.045;
         }
         this.carPitch += (targetPitch - this.carPitch) * 7.0 * dt;
         car.group.rotation.x = this.carPitch;
 
-        // Yaw angle (slight oversteer angle when drifting)
-        const targetYaw = -this.lateralSpeed * (this.isDrifting ? 0.05 : 0.024);
+        // Yaw: Points in direction of steering turn!
+        // When steerInput < 0 (left), targetYaw is positive (nose points left in Three.js right-handed Z-forward coordinate system)
+        const targetYaw = -this.lateralSpeed * (this.isDrifting ? 0.045 : 0.022);
         this.carHeading += (targetYaw - this.carHeading) * 10 * dt;
         car.group.rotation.y = this.carHeading;
 
-        // Body roll into corners (centrifugal roll)
-        const targetRoll = this.lateralSpeed * 0.02;
-        this.carRoll += (targetRoll - this.carRoll) * 8 * dt;
-        car.group.rotation.z = targetRoll;
+        // Roll / Lean:
+        // For Superbikes: Lean heavily into corners (up to 28° / 0.48 rad)!
+        // For Cars: Realistic body roll into corners
+        let targetRoll = 0;
+        if (isBike) {
+            targetRoll = -this.lateralSpeed * 0.028; // Motorcycle banks into turn!
+        } else {
+            targetRoll = this.lateralSpeed * 0.018; // Car centrifugal body roll
+        }
+        this.carRoll += (targetRoll - this.carRoll) * 8.5 * dt;
+        car.group.rotation.z = this.carRoll;
 
         // Micro road bounce
         this.suspensionY = Math.sin(pos.z * 1.5) * 0.015 * (this.speed / 150);
         car.group.position.y = this.suspensionY;
 
-        // Front wheels turn with steering input
-        const wheelSteerAngle = -steerInput * 0.38;
+        // Front wheels turn in direction of steering
+        const wheelSteerAngle = steerInput * 0.38;
         for (const fw of car.frontWheels) {
             fw.rotation.y = wheelSteerAngle;
         }
 
-        // 7. LONGITUDINAL MOVEMENT & WHEEL SPIN
+        // 7. LONGITUDINAL MOVEMENT
         const forwardMps = (this.speed / 2.237) * 0.45;
         pos.z += forwardMps * dt;
         this.distanceTraveled += forwardMps * dt;
@@ -806,14 +796,12 @@ class Game {
             w.rotation.x += forwardMps * dt * 3.2;
         }
 
-        // Taillights flare bright when braking
         if (isBraking) {
             car.tlMat.color.setHex(0xff0022);
         } else {
             car.tlMat.color.setHex(0x550008);
         }
 
-        // Shield & Combo timer
         if (this.shieldTimer > 0) {
             this.shieldTimer -= dt;
             if (this.shieldTimer <= 0) {
@@ -833,6 +821,7 @@ class Game {
     updateCamera(dt) {
         const car = this.playerCar;
         const pos = car.group.position;
+        const isBike = car.isBike === true;
         const speedRatio = this.speed / this.maxSpeed;
 
         const targetFov = this.isNitroActive ? 79 : (this.baseFov + speedRatio * 8.5);
@@ -841,9 +830,9 @@ class Game {
         this.camera.updateProjectionMatrix();
 
         if (this.cameraMode === 0) {
-            // Dynamic Chase Cam with G-Force Spring Damper
-            const followDist = 7.0 + speedRatio * 1.6;
-            const followHeight = 2.45 - (this.isNitroActive ? 0.35 : 0);
+            // Dynamic Chase Cam (Lower & more intimate for bikes)
+            const followDist = (isBike ? 5.8 : 7.0) + speedRatio * 1.5;
+            const followHeight = (isBike ? 1.9 : 2.45) - (this.isNitroActive ? 0.35 : 0);
 
             const targetX = pos.x * 0.72;
             const targetY = pos.y + followHeight;
@@ -858,15 +847,15 @@ class Game {
                 this.camera.position.y += (Math.random() - 0.5) * 0.04;
             }
 
-            this.camera.lookAt(pos.x, pos.y + 1.1, pos.z + 10);
+            this.camera.lookAt(pos.x, pos.y + (isBike ? 0.9 : 1.1), pos.z + 10);
         } else if (this.cameraMode === 1) {
-            // Low Bonnet / Hood Cam
-            this.camera.position.set(pos.x, pos.y + 0.92, pos.z + 1.35);
+            // Handlebars / Bonnet Cam
+            this.camera.position.set(pos.x, pos.y + (isBike ? 1.05 : 0.92), pos.z + (isBike ? 0.6 : 1.35));
             this.camera.lookAt(pos.x + this.lateralSpeed * 0.05, pos.y + 0.92, pos.z + 20);
         } else if (this.cameraMode === 2) {
-            // Cockpit / Dash Cam
-            this.camera.position.set(pos.x - 0.35, pos.y + 1.08, pos.z - 0.15);
-            this.camera.lookAt(pos.x - 0.35, pos.y + 1.08, pos.z + 15);
+            // Helmet / Cockpit Cam
+            this.camera.position.set(pos.x - (isBike ? 0 : 0.35), pos.y + (isBike ? 1.25 : 1.08), pos.z - 0.1);
+            this.camera.lookAt(pos.x - (isBike ? 0 : 0.35), pos.y + 1.1, pos.z + 15);
         } else if (this.cameraMode === 3) {
             // Top-Down Retro Arcade Cam
             this.camera.position.set(pos.x, pos.y + 18, pos.z - 4);
